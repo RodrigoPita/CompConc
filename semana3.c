@@ -5,33 +5,38 @@
 
 long int dim; //dimensao do vetor de entrada
 int nthreads; //numero de nthreads
-int *vetor; //vetor de entrada com dimensao dim
+double *vetor; //vetor de entrada com dimensao dim
 
 //fluxo das threads
 void * tarefa(void * arg) {
     long int id = (long int) arg; //identificador da thread
+    double *somaLocal; //variavel local da soma de elementos
     long int tamBloco = dim/nthreads; //tamanho do bloco de cada thread
     long int ini = id * tamBloco; //elemento inicial do bloco da thread
     long int fim; //elemento final(nao processado) do bloco da thread
+    
+    somaLocal = (double*) malloc(sizeof(double));
+    if(somaLocal == NULL) {
+        fprintf(stderr, "ERRO-malloc\n"); exit(1);
+    }
+    *somaLocal = 0;
     if(id == nthreads-1) fim = dim;
     else fim = ini + tamBloco; //trata o resto se houver
-    long int somaLocal = 0; //variavel local da soma de elementos
-    
     //soma os elementos do bloco da thread
     for(long int i = ini; i < fim; i++)
-        somaLocal += vetor[i];
+        *somaLocal += vetor[i];
     
     //retorna o resultado da soma local
-    pthread_exit((void * ) somaLocal);
+    pthread_exit((void *) somaLocal);
 }
 
 //fluxo principal
 int main(int argc, char *argv[]) {
-    long int somaSeq = 0; //soma sequencial
-    long int somaConc = 0; //soma concorrente
+    double somaSeq = 0; //soma sequencial
+    double somaConc = 0; //soma concorrente
     double ini, fim; //tomada de tempo
     pthread_t *tid;
-    long int retorno; //valor de retorno das threads
+    double *retorno; //valor de retorno das threads
     //recebe os parametros de entrada (dimensao do vetor, numero d ethreads)
     if(argc < 3) {
         fprintf(stderr, "Digite: %s ,dimensao do vetor> <numero de threads>\n", argv[0]);
@@ -40,7 +45,7 @@ int main(int argc, char *argv[]) {
     dim = atoi(argv[1]);
     nthreads = atoi(argv[2]);
     //aloca o vetor de entrada
-    vetor = (int*) malloc(sizeof(int)*dim);
+    vetor = (double*) malloc(sizeof(double)*dim);
     if(vetor == NULL) {
         fprintf(stderr, "ERRO--malloc\n");
         return 2;
@@ -48,7 +53,7 @@ int main(int argc, char *argv[]) {
     //preenche o vetor de entrada
     GET_TIME(ini);
     for(long int i = 0; i < dim; i++)
-        vetor[i] = i%1000;
+        vetor[i] = 1000.1/(i+1);
         
     //soma sequencial dos elementos
     for(long int i = 0; i < dim; i++)
@@ -76,13 +81,14 @@ int main(int argc, char *argv[]) {
             return 3;
         }
         //soma global
-        somaConc += retorno;
+        somaConc += *retorno;
+        free(retorno);
     }
     GET_TIME(fim);
     printf("Tempo concorrente: %lf\n", fim-ini);
     //exibir os resultados
-    printf("Soma seq: %ld\n", somaSeq);
-    printf("Soma conc: %ld\n", somaConc);
+    printf("Soma seq: %.15lf\n", somaSeq);
+    printf("Soma conc: %.15lf\n", somaConc);
     
     //libera as areads de memoria alocadas
     free(vetor);
