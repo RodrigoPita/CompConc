@@ -38,7 +38,7 @@ void *B (void *t) {
 
 /* Thread A */
 void *A (void *t) {
-    printf("B: Comecei\n");
+    printf("A: Comecei\n");
     
     pthread_mutex_lock(&x_mutex);
     if(x == 0) {
