@@ -31,14 +31,14 @@ void verificarAlerta(int idAtuador)
 	int i;
 	int k;
 	
-    //percorre inicio do vetor
+    //percorre inicio do vetor partindo da última escrita
 	for (i=(escritas % TAM_BUFFER); i > 0; i--)
 	{
 		medicao registro = buffer[i];
 		int temperatura = registro.temperatura;
 		int idSensor = registro.idSensor;
 		if(idSensor == idAtuador){
-			elementosSensor++;
+			elementosSensor++; //quantidade de registro encontradas para o sensor
 			if (temperatura > 35)
 			{
 				temperaturasMaior35++;
@@ -53,9 +53,10 @@ void verificarAlerta(int idAtuador)
 			}
 			if(elementosSensor == 5 && temperaturasMaior35 == 5) alertaVermelho = 1;
 		}
-		if(elementosSensor == 15) break;
+		if(elementosSensor == 15) break;//encerra ao encontrar 15 registros
 	}
 
+	//percorre final do vetor em casos da escrita já começar a sobreescrever o início
 	if(elementosSensor<15 && escritas > TAM_BUFFER){
 		for (k = TAM_BUFFER; k > (escritas % TAM_BUFFER); k--)
 		{
@@ -77,7 +78,7 @@ void verificarAlerta(int idAtuador)
 				}
 				if(elementosSensor == 5 && temperaturasMaior35 == 5) alertaVermelho = 1;
 			}
-			if(elementosSensor == 15) break;
+			if(elementosSensor == 15) break; //encerra ao encontrar 15 registros
 		}
 	}
 
@@ -157,7 +158,7 @@ void *atuador(void *arg)
 	int *id = (int *)arg;
 	while (1)
 	{
-		if(escritas > 0){
+		if(escritas > 0){//incia leitura apenas quando houver escrita
 			entrarLeitora(*id);
 			lerRegistro(*id);
 			sairLeitora(*id);
