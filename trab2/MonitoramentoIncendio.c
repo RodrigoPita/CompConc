@@ -55,12 +55,12 @@ void verificarAlerta()
 				temperaturaMaior35++;
 				if(elementosNoFinalBuffer > 10 && k == TAM_BUFFER - 1){
 					consecutividade++;
-					printf(ANSI_COLOR_RED "Leituras k: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, registro.idSensor, temperatura, registro.idLeitura);
+					printf(ANSI_COLOR_RED "Leituras: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, registro.idSensor, temperatura, registro.idLeitura);
 				}else{
-					printf(ANSI_COLOR_YELLOW "Leituras k: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, registro.idSensor, temperatura, registro.idLeitura);	
+					printf(ANSI_COLOR_YELLOW "Leituras: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, registro.idSensor, temperatura, registro.idLeitura);	
 				}
 			}else{
-				printf("Leituras k: idSensor[%d] temperatura[%d] idLeitura[%d] \n", registro.idSensor, temperatura, registro.idLeitura);
+				printf("Leituras: idSensor[%d] temperatura[%d] idLeitura[%d] \n", registro.idSensor, temperatura, registro.idLeitura);
 			}
 		}
 	}
@@ -76,12 +76,12 @@ void verificarAlerta()
 			if (i > (leituras % TAM_BUFFER - 6))
 			{
 				consecutividade++;
-				printf(ANSI_COLOR_RED "Leituras i: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, registro.idSensor, temperatura, registro.idLeitura);
+				printf(ANSI_COLOR_RED "Leituras: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, registro.idSensor, temperatura, registro.idLeitura);
 			}else{
-				printf(ANSI_COLOR_YELLOW "Leituras i: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, registro.idSensor, temperatura, registro.idLeitura);	
+				printf(ANSI_COLOR_YELLOW "Leituras: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, registro.idSensor, temperatura, registro.idLeitura);	
 			}
 		}else{
-			printf("Leituras i: idSensor[%d] temperatura[%d] idLeitura[%d]\n" , registro.idSensor, temperatura, registro.idLeitura);	
+			printf("Leituras: idSensor[%d] temperatura[%d] idLeitura[%d]\n" , registro.idSensor, temperatura, registro.idLeitura);	
 		}
 	}
 
