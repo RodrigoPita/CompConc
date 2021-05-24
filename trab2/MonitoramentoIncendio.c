@@ -18,87 +18,83 @@ typedef struct
 
 #define TAM_BUFFER 60
 
-pthread_mutex_t mutexLeituras;
-
 medicao buffer[TAM_BUFFER];
 int escritas = 0;
 int leituras = 0;
 
 
-void verificarAlerta()
+void verificarAlerta(int idAtuador)
 {
-	int temperaturaMaior35 = 0;
-	int consecutividade = 0;
-	int elementosNoFinalBuffer = 0;
+	int temperaturasMaior35 = 0;
+	int alertaVermelho = 0;
+	int elementosSensor = 0;
 	int i;
-	int k =0;
+	int k;
 	
-	i = (leituras % TAM_BUFFER) - 15;//recebe a posicao inicial das 15 ultimas leituras
-	if(i < 0){//caso negativo, pode significar que o buffer atingiu o seu limite e agora está sobreescrevendo os antigos, ou que ainda temos menos que 15 escritas
-		if(leituras >= TAM_BUFFER){
-			elementosNoFinalBuffer = (-1) * i;
-			k = TAM_BUFFER - elementosNoFinalBuffer;
-		} //caso haja igual ou mais leituras que o tamanho do buffer, significa que de fato está ocorrendo sobreescrita, 
-		//então k recebe a posição necessária para percorrer o extremo que está ao final do vetor
-		
-		i = 0;//nesse caso, a posição inicial será na extremidade que corresponde ao inicio do vetor
-	}
-
-	//percorre final caso necessário
-	if(k>0){
-		for (k; k < TAM_BUFFER; k++)
-		{
-			medicao registro = buffer[k];
-			int temperatura = registro.temperatura;
-			if (temperatura > 35)
-			{
-				temperaturaMaior35++;
-				if(elementosNoFinalBuffer > 10 && k == TAM_BUFFER - 1){
-					consecutividade++;
-					printf(ANSI_COLOR_RED "Leituras: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, registro.idSensor, temperatura, registro.idLeitura);
-				}else{
-					printf(ANSI_COLOR_YELLOW "Leituras: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, registro.idSensor, temperatura, registro.idLeitura);	
-				}
-			}else{
-				printf("Leituras: idSensor[%d] temperatura[%d] idLeitura[%d] \n", registro.idSensor, temperatura, registro.idLeitura);
-			}
-		}
-	}
-
-	//percorre inicio do vetor
-	for (i; i < (leituras % TAM_BUFFER); i++)
+    //percorre inicio do vetor
+	for (i=(escritas % TAM_BUFFER); i > 0; i--)
 	{
 		medicao registro = buffer[i];
 		int temperatura = registro.temperatura;
-		if (temperatura > 35)
-		{
-			temperaturaMaior35++;
-			if (i > (leituras % TAM_BUFFER - 6))
+		int idSensor = registro.idSensor;
+		if(idSensor == idAtuador){
+			elementosSensor++;
+			if (temperatura > 35)
 			{
-				consecutividade++;
-				printf(ANSI_COLOR_RED "Leituras: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, registro.idSensor, temperatura, registro.idLeitura);
+				temperaturasMaior35++;
+				if (elementosSensor == temperaturasMaior35)
+				{
+					printf(ANSI_COLOR_RED "Leitura %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, 15-elementosSensor, registro.idSensor, temperatura, registro.idLeitura);
+				}else{
+					printf(ANSI_COLOR_YELLOW "Leitura %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, 15-elementosSensor,registro.idSensor, temperatura, registro.idLeitura);	
+				}
 			}else{
-				printf(ANSI_COLOR_YELLOW "Leituras: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, registro.idSensor, temperatura, registro.idLeitura);	
+				printf("Leitura %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n" , 15-elementosSensor,registro.idSensor, temperatura, registro.idLeitura);	
 			}
-		}else{
-			printf("Leituras: idSensor[%d] temperatura[%d] idLeitura[%d]\n" , registro.idSensor, temperatura, registro.idLeitura);	
+			if(elementosSensor == 5 && temperaturasMaior35 == 5) alertaVermelho = 1;
+		}
+		if(elementosSensor == 15) break;
+	}
+
+	if(elementosSensor<15 && escritas > TAM_BUFFER){
+		for (k = TAM_BUFFER; k > (escritas % TAM_BUFFER); k--)
+		{
+			medicao registro = buffer[k];
+			int temperatura = registro.temperatura;
+			int idSensor = registro.idSensor;
+			if(idSensor == idAtuador){
+				elementosSensor++;
+				if (temperatura > 35)
+				{
+					temperaturasMaior35++;
+					if(elementosSensor == temperaturasMaior35){
+						printf(ANSI_COLOR_RED "Leituras %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, 15-elementosSensor, registro.idSensor, temperatura, registro.idLeitura);
+					}else{
+						printf(ANSI_COLOR_YELLOW "Leituras %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, 15-elementosSensor, registro.idSensor, temperatura, registro.idLeitura);	
+					}
+				}else{
+					printf("Leituras %d: idSensor[%d] temperatura[%d] idLeitura[%d] \n", 15-elementosSensor, registro.idSensor, temperatura, registro.idLeitura);
+				}
+				if(elementosSensor == 5 && temperaturasMaior35 == 5) alertaVermelho = 1;
+			}
+			if(elementosSensor == 15) break;
 		}
 	}
 
-	if (temperaturaMaior35 > 5)
+	if (temperaturasMaior35 >= 5)
 	{
-		if (consecutividade == 5)
+		if (alertaVermelho)
 		{
-			printf("Alerta vermelho!\n\n");
+			printf("Sensor %d: Alerta vermelho!\n\n", idAtuador);
 		}
 		else
 		{
-			printf("Alerta amarelo!\n\n");
+			printf("Sensor %d: Alerta amarelo!\n\n", idAtuador);
 		}
 	}
 	else
 	{
-		printf("Condição normal.\n\n");
+		printf("Sensor %d: Condição normal.\n\n", idAtuador);
 	}
 
 }
@@ -107,7 +103,7 @@ void calcularMediaTemperatura(int idAtuador){
 	int somaTemperatura = 0;
 	int mediaTemperatura=0;
 	int temperaturasSensor=0;
-	for(int i = 0; i < (escritas % TAM_BUFFER); i++){
+	for(int i = 0; i < TAM_BUFFER; i++){
 		if (buffer[i].idSensor == idAtuador)
 		{
 			somaTemperatura += buffer[i].temperatura;
@@ -117,28 +113,19 @@ void calcularMediaTemperatura(int idAtuador){
 
 	if(temperaturasSensor > 0){
 		mediaTemperatura = somaTemperatura / temperaturasSensor;
-		printf("Media das temperaturas do sensor %d: %d\n",idAtuador, mediaTemperatura);
+		printf("\n\nMedia das temperaturas do sensor %d: %d\n",idAtuador, mediaTemperatura);
 	}
 }
 
 void lerRegistro(int idAtuador)
 {
-	if(escritas > 0){
-		//printf("Atuador %d esta lendo, há %d\n", id, leituras);
-		pthread_mutex_lock(&mutexLeituras);
-		
-		medicao registro = buffer[leituras % TAM_BUFFER];
-		if (registro.idSensor == idAtuador)
-		{
-			leituras++;
-			if(leituras >= 5){
-				verificarAlerta();
-			}
-			calcularMediaTemperatura(idAtuador);
-		}
-		
-		pthread_mutex_unlock(&mutexLeituras);
+	//printf("Atuador %d esta lendo, há %d\n", id, leituras);
+	calcularMediaTemperatura(idAtuador);
+
+	if(escritas >= 5){
+		verificarAlerta(idAtuador);
 	}
+	
 }
 
 void registrarTemperatura(int temperatura, int id)
@@ -170,9 +157,11 @@ void *atuador(void *arg)
 	int *id = (int *)arg;
 	while (1)
 	{
-		entrarLeitora(*id);
-		lerRegistro(*id);
-		sairLeitora(*id);
+		if(escritas > 0){
+			entrarLeitora(*id);
+			lerRegistro(*id);
+			sairLeitora(*id);
+		}
 		sleep(2);
 	}
 	free(arg);
@@ -214,7 +203,6 @@ int main(int argc, char *argv[])
 
 	//inicializa as variaveis de sincronizacao
 	prepararSincronizacao();
-	pthread_mutex_init(&mutexLeituras, NULL);
 
 	//cria as threads leitoras
 	for (int i = 0; i < L; i++)
