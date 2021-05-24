@@ -11,11 +11,11 @@
 - [x] Quando medição > 30 escreve no buffer. 
 - [x] Medição a cada 1s e simulada por random [25,40].
 - [X] Inserir no buffer: medição, id do sensor e id da leitura.
-- O valor mais antigo pode ser sobreescrito, e segue FIFO.
+- [x] valor mais antigo pode ser sobreescrito, e segue FIFO.
 - [x] O buffer tem tamnho fixo de 60.
 
 ## Atuador: 
-- possui o mesmo id q o sensor. 
+- [x] possui o mesmo id q o sensor. 
 - [x] Faz leitura das medições a cada 2s. 
 - [x] Se as 5 últimas forem > 35, emite alerta vermelho. 
 - [x] Se entre as 15 últimas, 5 forem > 35, alerta amarelo. 
