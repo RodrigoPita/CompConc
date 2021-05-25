@@ -11,17 +11,44 @@ typedef struct
 	int idLeitura;
 } medicao;
 
-#define ANSI_COLOR_RED     "\x1b[31m"
-#define ANSI_COLOR_YELLOW   "\x1b[33m"
-#define ANSI_COLOR_BLUE   "\x1b[34m"
-#define ANSI_COLOR_RESET   "\x1b[0m"
+#define ANSI_COLOR_RED "\x1b[31m"
+#define ANSI_COLOR_YELLOW "\x1b[33m"
+#define ANSI_COLOR_BLUE "\x1b[34m"
+#define ANSI_COLOR_RESET "\x1b[0m"
 
 #define TAM_BUFFER 60
 
+FILE *fdApp;
 medicao buffer[TAM_BUFFER];
 int escritas = 0;
 int leituras = 0;
+pthread_mutex_t mutexLog;
 
+void criarLogApp()
+{
+	fdApp = fopen("MonitoramentoIncendio.py", "w+");
+	fprintf(fdApp, "%s", "import teste\n");
+	fprintf(fdApp, "%s", "le = teste.LE()\n");
+	fclose(fdApp);
+}
+
+void escreverNoLogAplicacao(const char *string, int temp, int elementos, int alerta)
+{
+	pthread_mutex_lock(&mutexLog);
+	fdApp = fopen("MonitoramentoIncendio.py", "a+");
+	fprintf(fdApp, string, temp, elementos, alerta);
+	fclose(fdApp);
+	pthread_mutex_unlock(&mutexLog);
+}
+
+void escreverNoLogAplicacaoNormal(const char *string, int temp, int alerta)
+{
+	pthread_mutex_lock(&mutexLog);
+	fdApp = fopen("MonitoramentoIncendio.py", "a+");
+	fprintf(fdApp, string, temp, alerta);
+	fclose(fdApp);
+	pthread_mutex_unlock(&mutexLog);
+}
 
 void verificarAlerta(int idAtuador)
 {
@@ -30,55 +57,71 @@ void verificarAlerta(int idAtuador)
 	int elementosSensor = 0;
 	int i;
 	int k;
-	
-    //percorre inicio do vetor partindo da última escrita
-	for (i=(escritas % TAM_BUFFER); i > 0; i--)
+
+	//percorre inicio do vetor partindo da última escrita
+	for (i = (escritas % TAM_BUFFER); i > 0; i--)
 	{
 		medicao registro = buffer[i];
 		int temperatura = registro.temperatura;
 		int idSensor = registro.idSensor;
-		if(idSensor == idAtuador){
+		if (idSensor == idAtuador)
+		{
 			elementosSensor++; //quantidade de registro encontradas para o sensor
 			if (temperatura > 35)
 			{
 				temperaturasMaior35++;
 				if (elementosSensor == temperaturasMaior35)
 				{
-					printf(ANSI_COLOR_RED "Leitura %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, 15-elementosSensor, registro.idSensor, temperatura, registro.idLeitura);
-				}else{
-					printf(ANSI_COLOR_YELLOW "Leitura %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, 15-elementosSensor,registro.idSensor, temperatura, registro.idLeitura);	
+					printf(ANSI_COLOR_RED "Leitura %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, 15 - elementosSensor, registro.idSensor, temperatura, registro.idLeitura);
 				}
-			}else{
-				printf("Leitura %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n" , 15-elementosSensor,registro.idSensor, temperatura, registro.idLeitura);	
+				else
+				{
+					printf(ANSI_COLOR_YELLOW "Leitura %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, 15 - elementosSensor, registro.idSensor, temperatura, registro.idLeitura);
+				}
 			}
-			if(elementosSensor == 5 && temperaturasMaior35 == 5) alertaVermelho = 1;
+			else
+			{
+				printf("Leitura %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n", 15 - elementosSensor, registro.idSensor, temperatura, registro.idLeitura);
+			}
+			if (elementosSensor == 5 && temperaturasMaior35 == 5)
+				alertaVermelho = 1;
 		}
-		if(elementosSensor == 15) break;//encerra ao encontrar 15 registros
+		if (elementosSensor == 15)
+			break; //encerra ao encontrar 15 registros
 	}
 
 	//percorre final do vetor em casos da escrita já começar a sobreescrever o início
-	if(elementosSensor<15 && escritas > TAM_BUFFER){
+	if (elementosSensor < 15 && escritas > TAM_BUFFER)
+	{
 		for (k = TAM_BUFFER; k > (escritas % TAM_BUFFER); k--)
 		{
 			medicao registro = buffer[k];
 			int temperatura = registro.temperatura;
 			int idSensor = registro.idSensor;
-			if(idSensor == idAtuador){
+			if (idSensor == idAtuador)
+			{
 				elementosSensor++;
 				if (temperatura > 35)
 				{
 					temperaturasMaior35++;
-					if(elementosSensor == temperaturasMaior35){
-						printf(ANSI_COLOR_RED "Leituras %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, 15-elementosSensor, registro.idSensor, temperatura, registro.idLeitura);
-					}else{
-						printf(ANSI_COLOR_YELLOW "Leituras %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, 15-elementosSensor, registro.idSensor, temperatura, registro.idLeitura);	
+					if (elementosSensor == temperaturasMaior35)
+					{
+						printf(ANSI_COLOR_RED "Leituras %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, 15 - elementosSensor, registro.idSensor, temperatura, registro.idLeitura);
 					}
-				}else{
-					printf("Leituras %d: idSensor[%d] temperatura[%d] idLeitura[%d] \n", 15-elementosSensor, registro.idSensor, temperatura, registro.idLeitura);
+					else
+					{
+						printf(ANSI_COLOR_YELLOW "Leituras %d: idSensor[%d] temperatura[%d] idLeitura[%d]\n" ANSI_COLOR_RESET, 15 - elementosSensor, registro.idSensor, temperatura, registro.idLeitura);
+					}
 				}
-				if(elementosSensor == 5 && temperaturasMaior35 == 5) alertaVermelho = 1;
+				else
+				{
+					printf("Leituras %d: idSensor[%d] temperatura[%d] idLeitura[%d] \n", 15 - elementosSensor, registro.idSensor, temperatura, registro.idLeitura);
+				}
+				if (elementosSensor == 5 && temperaturasMaior35 == 5)
+					alertaVermelho = 1;
 			}
-			if(elementosSensor == 15) break; //encerra ao encontrar 15 registros
+			if (elementosSensor == 15)
+				break; //encerra ao encontrar 15 registros
 		}
 	}
 
@@ -87,24 +130,28 @@ void verificarAlerta(int idAtuador)
 		if (alertaVermelho)
 		{
 			printf("Sensor %d: Alerta vermelho!\n\n", idAtuador);
+			escreverNoLogAplicacao("le.disparandoAlertaVermelho(%d, %d, %d)\n", temperaturasMaior35, elementosSensor, alertaVermelho);
 		}
 		else
 		{
 			printf("Sensor %d: Alerta amarelo!\n\n", idAtuador);
+			escreverNoLogAplicacao("le.disparandoAlertaAmarelo(%d, %d, %d)\n", temperaturasMaior35, elementosSensor, alertaVermelho);
 		}
 	}
 	else
 	{
 		printf("Sensor %d: Condição normal.\n\n", idAtuador);
+		escreverNoLogAplicacaoNormal("le.disparandoCondicaoNormal(%d, %d)\n", temperaturasMaior35, alertaVermelho);
 	}
-
 }
 
-void calcularMediaTemperatura(int idAtuador){
+void calcularMediaTemperatura(int idAtuador)
+{
 	int somaTemperatura = 0;
-	int mediaTemperatura=0;
-	int temperaturasSensor=0;
-	for(int i = 0; i < TAM_BUFFER; i++){
+	int mediaTemperatura = 0;
+	int temperaturasSensor = 0;
+	for (int i = 0; i < TAM_BUFFER; i++)
+	{
 		if (buffer[i].idSensor == idAtuador)
 		{
 			somaTemperatura += buffer[i].temperatura;
@@ -112,26 +159,25 @@ void calcularMediaTemperatura(int idAtuador){
 		}
 	}
 
-	if(temperaturasSensor > 0){
+	if (temperaturasSensor > 0)
+	{
 		mediaTemperatura = somaTemperatura / temperaturasSensor;
-		printf("\n\nMedia das temperaturas do sensor %d: %d\n",idAtuador, mediaTemperatura);
+		printf("\n\nMedia das temperaturas do sensor %d: %d\n", idAtuador, mediaTemperatura);
 	}
 }
 
 void lerRegistro(int idAtuador)
 {
-	//printf("Atuador %d esta lendo, há %d\n", id, leituras);
 	calcularMediaTemperatura(idAtuador);
 
-	if(escritas >= 5){
+	if (escritas >= 5)
+	{
 		verificarAlerta(idAtuador);
 	}
-	
 }
 
 void registrarTemperatura(int temperatura, int id)
 {
-	//printf("Sensor %d esta escrevendo\n", id);
 	medicao novo_registro;
 	novo_registro.temperatura = temperatura;
 	novo_registro.idSensor = id;
@@ -158,7 +204,8 @@ void *atuador(void *arg)
 	int *id = (int *)arg;
 	while (1)
 	{
-		if(escritas > 0){//incia leitura apenas quando houver escrita
+		if (escritas > 0)
+		{ //incia leitura apenas quando houver escrita
 			entrarLeitora(*id);
 			lerRegistro(*id);
 			sairLeitora(*id);
@@ -168,7 +215,6 @@ void *atuador(void *arg)
 	free(arg);
 	pthread_exit(NULL);
 }
-
 
 //thread escritora
 void *sensor(void *arg)
@@ -202,6 +248,9 @@ int main(int argc, char *argv[])
 	L = atoi(argv[1]); //devem possuir mesmo id e portanto mesma quantidade
 	E = atoi(argv[1]);
 
+	//cria ou limpa arquivo de log
+	criarLogApp();
+
 	//inicializa as variaveis de sincronizacao
 	prepararSincronizacao();
 
@@ -211,8 +260,8 @@ int main(int argc, char *argv[])
 		id[i] = i + 1;
 		if (pthread_create(&tid[i], NULL, atuador, (void *)&id[i]))
 			exit(-1);
-		id[i+E] = i + 1;
-		if (pthread_create(&tid[i], NULL, sensor, (void *)&id[i+E]))
+		id[i + E] = i + 1;
+		if (pthread_create(&tid[i], NULL, sensor, (void *)&id[i + E]))
 			exit(-1);
 	}
 

@@ -39,3 +39,19 @@ class LE:
     def escritorDesbloqueado(self, id):
         '''Recebe o id do escritor e registra saida da espera'''
         self.escritores_fila -=1
+
+    def disparandoAlertaVermelho(self,temperaturasMaior35, elementosSensor, alertaVermelho):
+        '''Verifica se o alerta foi disparado corretamente'''
+        if(temperaturasMaior35<5 or elementosSensor<5 or alertaVermelho==0):
+            print("ERRO: alerta vermelho indevido, ha menos que 5 temperaturas registradas maiores que 35 graus ou poucos registros ou o alerta vermelho nao esta ativado")
+
+    def disparandoAlertaAmarelo(self, temperaturasMaior35, elementosSensor, alertaVermelho):
+        '''Verifica se o alerta foi disparado corretamente'''
+        if(temperaturasMaior35<5 or elementosSensor<5 or alertaVermelho==1):
+           print("ERRO: alerta amarelo indevido, ha menos que 5 temperaturas registradas maiores que 35 graus ou poucos registros ou o alerta vermelho esta ativado")
+
+    def disparandoCondicaoNormal(self, temperaturasMaior35, alertaVermelho):
+        '''Verifica se o alerta foi disparado corretamente'''
+        if(temperaturasMaior35>5 or alertaVermelho==1):
+            print("ERRO: alerta condicao normal indevido, ha mais de 5 temperaturas registradas maiores que 35 ou o alerta vermelho esta ativado")
+
